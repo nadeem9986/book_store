@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - Online Bookstore{% endblock %}
+
+{% block content %}
+<h2 style="color: #667eea; text-align: center; margin-bottom: 30px;">📦 Checkout</h2>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+    <div>
+        <h3 style="color: #333; margin-bottom: 20px;">Order Summary</h3>
+        {% for item in cart_items %}
+        <div style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">
+            <strong>{{ item.book.title }}</strong> x {{ item.quantity }}
+            <span style="float: right;">₹{{ item.get_total_price }}</span>
+        </div>
+        {% endfor %}
+        <div style="padding: 15px; background: #667eea; color: white; border-radius: 8px; margin-top: 20px;">
+            <strong>Total Amount: ₹{{ total }}</strong>
+        </div>
+    </div>
+
+    <div>
+        <h3 style="color: #333; margin-bottom: 20px;">Delivery Information</h3>
+        <form method="POST" class="order-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="{% url 'view_cart' %}" class="btn btn-secondary">← Back to Cart</a>
+                <button type="submit" class="btn btn-success">Place Order</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

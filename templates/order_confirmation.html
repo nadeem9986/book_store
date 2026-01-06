@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmation - Online Bookstore{% endblock %}
+
+{% block content %}
+<div class="order-confirmation">
+    <h2>✅ Order Placed Successfully!</h2>
+    <p style="font-size: 1.2em; color: #666;">Thank you for your order!</p>
+    
+    <div class="order-details">
+        <h3>Order Details</h3>
+        <p><strong>Order ID:</strong> #{{ order.id }}</p>
+        <p><strong>Customer Name:</strong> {{ order.customer_name }}</p>
+        <p><strong>Email:</strong> {{ order.customer_email }}</p>
+        <p><strong>Phone:</strong> {{ order.customer_phone }}</p>
+        <p><strong>Delivery Address:</strong> {{ order.address }}</p>
+        <p><strong>Status:</strong> <span style="color: #667eea;">{{ order.get_status_display }}</span></p>
+        <p><strong>Order Date:</strong> {{ order.created_at|date:"F d, Y h:i A" }}</p>
+        
+        <div class="order-items">
+            <h4 style="margin-top: 20px; color: #667eea;">Items Ordered:</h4>
+            {% for item in order.items.all %}
+            <div class="order-item">
+                <strong>{{ item.book.title }}</strong> x {{ item.quantity }}
+                <span style="float: right;">₹{{ item.get_total_price }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #667eea; color: white; border-radius: 8px;">
+            <h3>Total Amount: ₹{{ order.total_amount }}</h3>
+        </div>
+    </div>
+    
+    <div style="margin-top: 30px;">
+        <a href="{% url 'home' %}" class="btn">Continue Shopping</a>
+    </div>
+</div>
+{% endblock %}
