@@ -256,42 +256,25 @@ Created as a Django learning project demonstrating full-stack web development.
 
 ---
 
+## Quick Start
 
+✅ **Your Bookstore is LIVE!**
 
-to run the code 
+🌐 **Access the Application:**
+- **Main Website:** http://127.0.0.1:8000/
+- **Admin Panel:** http://127.0.0.1:8000/admin/
+  - Username: `admin`
+  - Password: `admin123`
 
-✅ Your Bookstore is LIVE!
-🌐 Access the Application:
-Open your web browser and visit:
+📝 **Next Steps:**
+1. Login to admin panel
+2. Add categories (Fiction, Science, etc.)
+3. Add sample books with prices and stock
+4. Test the application
 
-Main Website: http://127.0.0.1:8000/
-Browse books, add to cart, place orders
-Admin Panel: http://127.0.0.1:8000/admin/
-
-
-Username: admin
-Password: admin123
-
-
-📝 Next Steps:
-Add Sample Books (via Admin Panel):
-Login to http://127.0.0.1:8000/admin/
-
-
-Click "Categories" → Add categories (Fiction, Science, etc.)
-Click "Books" → Add sample books with prices and stock
-Test the Application:
-Browse books on home page
-Add books to cart
-Proceed to checkout
-Place an order
-🛑 To Stop the Server:
-Press Ctrl + C in the terminal
-
-🔄 To Run Again Later:
-
-
-bash
+ **To Run Again Later:**
+```bash
 cd /home/n/Desktop/new_project/bookstore_project
 source ../venv/bin/activate
 python manage.py runserver
+```
