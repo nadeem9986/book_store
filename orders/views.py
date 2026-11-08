@@ -21,6 +21,7 @@ def place_order(request):
         if form.is_valid():
             order = form.save(commit=False)
             order.total_amount = total
+            order.session_key = session_key
             order.save()
             
             # Create order items
@@ -44,5 +45,6 @@ def place_order(request):
 
 
 def order_confirmation(request, order_id):
-    order = get_object_or_404(Order, pk=order_id)
+    session_key = get_session_key(request)
+    order = get_object_or_404(Order, pk=order_id, session_key=session_key)
     return render(request, 'order_confirmation.html', {'order': order})
