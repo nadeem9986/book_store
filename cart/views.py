@@ -48,7 +48,11 @@ def update_quantity(request, item_id):
     if request.method == 'POST':
         session_key = get_session_key(request)
         cart_item = get_object_or_404(CartItem, pk=item_id, session_key=session_key)
-        quantity = int(request.POST.get('quantity', 1))
+        try:
+            quantity = int(request.POST.get('quantity', 1))
+        except (TypeError, ValueError):
+            messages.error(request, 'Invalid quantity.')
+            return redirect('view_cart')
         
         if quantity > 0:
             cart_item.quantity = quantity
