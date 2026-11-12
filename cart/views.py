@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.views.decorators.http import require_POST
 from .models import CartItem
 from books.models import Book
 
@@ -17,6 +18,7 @@ def view_cart(request):
     return render(request, 'cart.html', {'cart_items': cart_items, 'total': total})
 
 
+@require_POST
 def add_to_cart(request, book_id):
     book = get_object_or_404(Book, pk=book_id)
     session_key = get_session_key(request)
@@ -36,6 +38,7 @@ def add_to_cart(request, book_id):
     return redirect('view_cart')
 
 
+@require_POST
 def remove_from_cart(request, item_id):
     session_key = get_session_key(request)
     cart_item = get_object_or_404(CartItem, pk=item_id, session_key=session_key)
