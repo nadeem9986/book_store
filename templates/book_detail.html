@@ -20,7 +20,10 @@
         <div style="margin-top: 20px;">
             <a href="{% url 'home' %}" class="btn btn-secondary">← Back to Books</a>
             {% if book.stock > 0 %}
-            <a href="{% url 'add_to_cart' book.id %}" class="btn">Add to Cart</a>
+            <form method="POST" action="{% url 'add_to_cart' book.id %}" class="add-form" style="display:inline">
+                {% csrf_token %}
+                <button type="submit" class="btn">Add to Cart</button>
+            </form>
             {% endif %}
         </div>
     </div>
