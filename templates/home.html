@@ -32,7 +32,10 @@
         </p>
         <a href="{% url 'book_detail' book.id %}" class="btn btn-secondary">View Details</a>
         {% if book.stock > 0 %}
-        <a href="{% url 'add_to_cart' book.id %}" class="btn">Add to Cart</a>
+        <form method="POST" action="{% url 'add_to_cart' book.id %}" class="add-form" style="display:inline">
+            {% csrf_token %}
+            <button type="submit" class="btn">Add to Cart</button>
+        </form>
         {% endif %}
     </div>
     {% endfor %}
