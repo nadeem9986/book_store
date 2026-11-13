@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.db import DatabaseError, transaction
 from .models import Order, OrderItem
 from .forms import OrderForm
 from cart.models import CartItem
@@ -19,23 +20,32 @@ def place_order(request):
     if request.method == 'POST':
         form = OrderForm(request.POST)
         if form.is_valid():
-            order = form.save(commit=False)
-            order.total_amount = total
-            order.session_key = session_key
-            order.save()
-            
-            # Create order items
-            for cart_item in cart_items:
-                OrderItem.objects.create(
-                    order=order,
-                    book=cart_item.book,
-                    quantity=cart_item.quantity,
-                    price=cart_item.book.price
+            try:
+                with transaction.atomic():
+                    order = form.save(commit=False)
+                    order.total_amount = total
+                    order.session_key = session_key
+                    order.save()
+
+                    # Create order items
+                    for cart_item in cart_items:
+                        OrderItem.objects.create(
+                            order=order,
+                            book=cart_item.book,
+                            quantity=cart_item.quantity,
+                            price=cart_item.book.price
+                        )
+
+                    # Clear cart
+                    cart_items.delete()
+            except DatabaseError:
+                messages.error(
+                    request,
+                    'Something went wrong while placing your order. '
+                    'Your cart is unchanged - please try again.'
                 )
-            
-            # Clear cart
-            cart_items.delete()
-            
+                return redirect('view_cart')
+
             messages.success(request, 'Order placed successfully!')
             return redirect('order_confirmation', order_id=order.id)
     else:
