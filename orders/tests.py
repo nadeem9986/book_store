@@ -40,3 +40,64 @@ class OrderConfirmationPrivacyTests(TestCase):
         stranger = Client()
         detail = stranger.get(confirmation_url)
         self.assertEqual(detail.status_code, 404)
+
+
+class AtomicOrderPlacementTests(TestCase):
+    """Regression tests: a failed order placement writes no partial order."""
+
+    def setUp(self):
+        from books.models import Book, Category
+        cat = Category.objects.create(name='Fiction')
+        self.book1 = Book.objects.create(title='T1', author='A', price=10, category=cat)
+        self.book2 = Book.objects.create(title='T2', author='A', price=20, category=cat)
+
+    def _seed_cart(self, client, *books):
+        session = client.session
+        session.save()
+        from cart.models import CartItem
+        for book in books:
+            CartItem.objects.create(book=book, quantity=1, session_key=session.session_key)
+
+    def test_failed_placement_rolls_back_and_keeps_cart(self):
+        from unittest.mock import patch
+        from django.db import DatabaseError
+        from django.test import Client
+        from orders.models import Order, OrderItem
+        from cart.models import CartItem
+
+        client = Client()
+        self._seed_cart(client, self.book1, self.book2)
+
+        with patch('orders.views.OrderItem') as mock_order_item:
+            mock_order_item.objects.create.side_effect = DatabaseError('simulated failure')
+            response = client.post('/orders/place-order/', {
+                'customer_name': 'Test Person',
+                'customer_email': 't@example.com',
+                'customer_phone': '9999999999',
+                'address': '123 Secret Lane',
+            })
+
+        # Order save must be rolled back; cart must survive untouched.
+        self.assertEqual(Order.objects.count(), 0)
+        self.assertEqual(OrderItem.objects.count(), 0)
+        self.assertEqual(CartItem.objects.count(), 2)
+        self.assertRedirects(response, '/cart/cart/')
+
+    def test_successful_placement_writes_items_and_clears_cart(self):
+        from django.test import Client
+        from orders.models import Order, OrderItem
+        from cart.models import CartItem
+
+        client = Client()
+        self._seed_cart(client, self.book1, self.book2)
+        response = client.post('/orders/place-order/', {
+            'customer_name': 'Test Person',
+            'customer_email': 't@example.com',
+            'customer_phone': '9999999999',
+            'address': '123 Secret Lane',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        order = Order.objects.get()
+        self.assertEqual(order.items.count(), 2)
+        self.assertEqual(CartItem.objects.count(), 0)
