@@ -1,10 +1,20 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import DatabaseError, transaction
+from django.db.models import F
+from books.models import Book
 from .models import Order, OrderItem
 from .forms import OrderForm
 from cart.models import CartItem
 from cart.views import get_session_key
+
+
+class InsufficientStockError(Exception):
+    """Raised when a cart line asks for more than the book has in stock."""
+
+    def __init__(self, book):
+        self.book = book
+        super().__init__(f'Not enough stock for "{book.title}".')
 
 
 def place_order(request):
@@ -27,8 +37,14 @@ def place_order(request):
                     order.session_key = session_key
                     order.save()
 
-                    # Create order items
+                    # Create order items, decrementing stock atomically
                     for cart_item in cart_items:
+                        updated = Book.objects.filter(
+                            pk=cart_item.book.pk,
+                            stock__gte=cart_item.quantity,
+                        ).update(stock=F('stock') - cart_item.quantity)
+                        if not updated:
+                            raise InsufficientStockError(cart_item.book)
                         OrderItem.objects.create(
                             order=order,
                             book=cart_item.book,
@@ -38,6 +54,13 @@ def place_order(request):
 
                     # Clear cart
                     cart_items.delete()
+            except InsufficientStockError as exc:
+                messages.error(
+                    request,
+                    f'Sorry, "{exc.book.title}" does not have enough stock '
+                    'for that quantity. Please update your cart.'
+                )
+                return redirect('view_cart')
             except DatabaseError:
                 messages.error(
                     request,
